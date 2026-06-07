@@ -2,37 +2,90 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+
 import {
   ArrowRight,
   ArrowUpRight,
-  CornerDownRight,
   Menu,
   X,
   Star,
   Quote,
-  MoveRight,
-  MoveLeft,
   CheckCircle2,
   Send,
   Mail,
   MapPin,
   Phone,
 } from "lucide-react";
-
 import { FaGithub, FaInstagram, FaLinkedin } from "react-icons/fa";
 
-import Link from "next/link";
 import { CONFIG } from "@/lib/config";
 import { blogs } from "@/lib/blogs";
 import { services, experience, portfolio } from "@/lib/data";
+
 // -----------------------------------------------------------------------------
-// Navigation Bar 
+// Helper: reduce motion detection
+// -----------------------------------------------------------------------------
+const usePrefersReducedMotion = () => {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+  return prefersReducedMotion;
+};
+
+// -----------------------------------------------------------------------------
+// Skip to content link (accessibility)
+// -----------------------------------------------------------------------------
+const SkipLink = () => (
+  <a
+    href="#main-content"
+    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-[100] bg-[#FF4D1C] text-white px-4 py-2 rounded-md"
+  >
+    Skip to main content
+  </a>
+);
+
+// -----------------------------------------------------------------------------
+// Navigation Bar (improved accessibility)
 // -----------------------------------------------------------------------------
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeMenu();
+      if (e.key === "Tab" && menuRef.current) {
+        const focusable = menuRef.current.querySelectorAll(
+          'a, button, [tabindex="0"]'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0] as HTMLElement;
+        const last = focusable[focusable.length - 1] as HTMLElement;
+        if (e.shiftKey && document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    closeBtnRef.current?.focus();
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isMenuOpen]);
 
   const navLinks = [
     { name: "Home", href: "#home" },
@@ -45,10 +98,10 @@ export const Navbar = () => {
 
   return (
     <>
-      {/* Desktop navigation */}
+      <SkipLink />
       <nav className="fixed top-6 left-0 right-0 z-[60] flex justify-center px-4">
         <div className="bg-[#1A1A1A] text-white rounded-full px-2 py-2 pl-6 pr-2 flex items-center gap-8 shadow-2xl max-w-5xl w-full justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2" aria-label="Home">
             <div className="w-8 h-8 bg-[#FF4D1C] rounded-full flex items-center justify-center font-bold text-white">
               A
             </div>
@@ -62,13 +115,17 @@ export const Navbar = () => {
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <a href="#contact" className="hidden md:block bg-transparent text-white text-sm font-medium hover:text-[#FF4D1C]">
+            <a
+              href="#contact"
+              className="hidden md:block bg-transparent text-white text-sm font-medium hover:text-[#FF4D1C]"
+            >
               Let's talk us
             </a>
             <button
               onClick={toggleMenu}
-              className="md:hidden p-2 text-white focus:outline-none"
+              className="md:hidden p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded-full"
               aria-label="Toggle menu"
+              aria-expanded={isMenuOpen}
             >
               <Menu size={18} />
             </button>
@@ -76,7 +133,6 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile menu overlay */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
@@ -88,17 +144,21 @@ export const Navbar = () => {
             onClick={closeMenu}
           >
             <motion.div
+              ref={menuRef}
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="absolute right-0 top-0 h-full w-64 bg-[#1A1A1A] shadow-2xl"
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-label="Mobile navigation menu"
             >
               <div className="flex justify-end p-6">
                 <button
+                  ref={closeBtnRef}
                   onClick={closeMenu}
-                  className="text-white p-2 hover:text-[#FF4D1C] transition-colors"
+                  className="text-white p-2 hover:text-[#FF4D1C] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded-full"
                   aria-label="Close menu"
                 >
                   <X size={28} />
@@ -110,7 +170,7 @@ export const Navbar = () => {
                     key={link.name}
                     href={link.href}
                     onClick={closeMenu}
-                    className="text-white text-lg font-bold py-3 w-full text-center hover:text-[#FF4D1C] transition-colors border-b border-gray-800 last:border-0"
+                    className="text-white text-lg font-bold py-3 w-full text-center hover:text-[#FF4D1C] transition-colors border-b border-gray-800 last:border-0 focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]"
                   >
                     {link.name}
                   </a>
@@ -118,7 +178,7 @@ export const Navbar = () => {
                 <a
                   href="#contact"
                   onClick={closeMenu}
-                  className="mt-6 bg-[#FF4D1C] text-white px-6 py-3 rounded-full font-bold text-base w-full text-center hover:bg-orange-600 transition-colors"
+                  className="mt-6 bg-[#FF4D1C] text-white px-6 py-3 rounded-full font-bold text-base w-full text-center hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
                 >
                   Let's talk us
                 </a>
@@ -132,23 +192,15 @@ export const Navbar = () => {
 };
 
 // -----------------------------------------------------------------------------
-// Hero Section 
+// Hero Section (optimized images, reduced motion)
 // -----------------------------------------------------------------------------
 const Hero = () => {
-  const arrowSettings = {
-    width: 70,
-    height: 70,
-    gap: "7px",
-    verticalOffset: "-14px",
-    color: "#1A1A1A",
-    thickness: 3.3,
-    animationDelay: 0.5,
-  };
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   return (
     <section id="home" className="pt-26 pb-0 bg-white relative overflow-hidden flex flex-col items-center">
       <motion.div
-        initial={{ y: 20, opacity: 0 }}
+        initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative mb-2 border border-gray-200 px-6 py-2 rounded-full shadow-sm bg-white z-10"
       >
@@ -156,21 +208,18 @@ const Hero = () => {
         <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-b border-r border-gray-200 rotate-45"></div>
       </motion.div>
 
-      {/* ===== HEADING WITH VERTICAL OFFSET ===== */}
-      {/* Change -top-1 to -top-2 (8px) to move higher, or -top-0.5 (2px) for smaller step.
-          Remove the class to revert to original position. */}
-      <motion.h1
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="text-3xl md:text-[5.5rem] font-semibold text-[#1A1A1A] text-center leading-[1.1] z-0 relative tracking-tight px-4 mt-10 md:mt-20 max-w-7xl mx-auto relative -top-11 md:-top-11"
-      >
-        I'm <span className="text-[#FF4D1C]">{CONFIG.name}</span>,<br /> Next.js Expert
-      </motion.h1>
+  <motion.h1
+  initial={prefersReducedMotion ? false : { y: 30, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  className="text-3xl md:text-[4.5rem] font-semibold text-[#1A1A1A] text-center leading-[1.1] z-0 relative tracking-tight px-4 mt-10 md:mt-20 max-w-7xl mx-auto mt-4 md:-top-10"
+>
+  I'm <span className="text-[#FF4D1C]">{CONFIG.name}</span>,<br /> Next.js Expert
+</motion.h1>
 
-      {/* Rest of the hero content (image, buttons, etc.) unchanged */}
       <div className="relative w-full max-w-6xl mx-auto flex justify-center items-end h-[400px] md:h-[550px] -mt-30 md:-mt-40">
+        {/* Left quote - hidden on mobile */}
         <div className="absolute top-[20%] left-6 md:left-12 z-10 hidden lg:block">
-          <Quote className="text-[#1A1A1A] mb-2 fill-current rotate-180" size={24} />
+          <Quote className="text-[#1A1A1A] mb-2 fill-current rotate-180" size={24} aria-hidden="true" />
           <p className="text-[13px] font-medium text-gray-500 max-w-[190px]">
             I build high-performance web applications using Next.js.
           </p>
@@ -179,10 +228,11 @@ const Hero = () => {
           </div>
         </div>
 
+        {/* Right stars - hidden on mobile */}
         <div className="absolute top-[20%] right-6 md:right-12 text-right z-10 hidden lg:block">
-          <div className="flex gap-1 justify-end mb-2">
+          <div className="flex gap-1 justify-end mb-2" aria-label="5 star rating">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Star key={i} size={14} className="fill-[#FF4D1C] text-[#FF4D1C]" />
+              <Star key={i} size={14} className="fill-[#FF4D1C] text-[#FF4D1C]" aria-hidden="true" />
             ))}
           </div>
           <div className="font-bold text-2xl text-[#1A1A1A]">Next.js</div>
@@ -192,60 +242,60 @@ const Hero = () => {
         </div>
 
         <div className="absolute bottom-0 w-[280px] h-[140px] md:w-[480px] md:h-[270px] bg-[#FF4D1C] rounded-t-full z-10"></div>
-        <motion.div initial={{ y: 50 }} animate={{ y: 0 }} className="relative z-20 w-[280px] md:w-[480px]">
-          <img src="/amir.png" alt={CONFIG.name} className="w-full h-auto object-contain" />
-        </motion.div>
+        <div className="relative z-20 w-[280px] md:w-[480px]">
+          <Image
+            src="/amir.png"
+            alt={CONFIG.name}
+            width={480}
+            height={550}
+            priority
+            className="w-full h-auto object-contain"
+            style={{ width: 'auto', height: 'auto' }}
+          />
+        </div>
 
         <div className="absolute bottom-[40px] md:bottom-[60px] z-50 flex gap-4 justify-center items-center">
           <div className="relative">
-            <div
-              className="absolute right-full top-1/2 pointer-events-none hidden md:block"
-              style={{
-                marginRight: arrowSettings.gap,
-                marginTop: arrowSettings.verticalOffset,
-                width: arrowSettings.width,
-                height: arrowSettings.height,
-                transform: "translateY(-50%)",
-              }}
+            <div className="absolute right-full top-1/2 pointer-events-none hidden md:block"
+              style={{ marginRight: "7px", marginTop: "-14px", width: "70px", height: "70px", transform: "translateY(-50%)" }}
+              aria-hidden="true"
             >
-              <motion.svg width="100%" height="100%" viewBox="0 0 100 60" fill="none" initial="hidden" animate="visible">
-                <motion.path
-                  d="M 5 5 C 5 35, 25 50, 95 50"
-                  stroke={arrowSettings.color}
-                  strokeWidth={arrowSettings.thickness}
-                  strokeLinecap="round"
-                  variants={{
-                    hidden: { pathLength: 0, opacity: 0 },
-                    visible: {
-                      pathLength: 1,
-                      opacity: 1,
-                      transition: { duration: 0.8, delay: arrowSettings.animationDelay },
-                    },
-                  }}
-                />
-                <motion.path
-                  d="M 80 40 L 95 50 L 80 60"
-                  stroke={arrowSettings.color}
-                  strokeWidth={arrowSettings.thickness}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  variants={{
-                    hidden: { opacity: 0 },
-                    visible: { opacity: 1, transition: { delay: arrowSettings.animationDelay + 0.7 } },
-                  }}
-                />
-              </motion.svg>
+              {!prefersReducedMotion && (
+                <motion.svg width="100%" height="100%" viewBox="0 0 100 60" fill="none" initial="hidden" animate="visible">
+                  <motion.path
+                    d="M 5 5 C 5 35, 25 50, 95 50"
+                    stroke="#1A1A1A"
+                    strokeWidth={3.3}
+                    strokeLinecap="round"
+                    variants={{
+                      hidden: { pathLength: 0, opacity: 0 },
+                      visible: { pathLength: 1, opacity: 1, transition: { duration: 0.8, delay: 0.5 } },
+                    }}
+                  />
+                  <motion.path
+                    d="M 80 40 L 95 50 L 80 60"
+                    stroke="#1A1A1A"
+                    strokeWidth={3.3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: { opacity: 1, transition: { delay: 1.2 } },
+                    }}
+                  />
+                </motion.svg>
+              )}
             </div>
             <a
               href="#portfolio"
-              className="bg-[#FF4D1C] text-white px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,77,28,0.4)] hover:scale-105 transition-transform duration-300 block"
+              className="bg-[#FF4D1C] text-white px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,77,28,0.4)] hover:scale-105 transition-transform duration-300 block focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]"
             >
               Portfolio
             </a>
           </div>
           <a
             href="#contact"
-            className="bg-white text-black px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:bg-gray-50 transition"
+            className="bg-white text-black px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]"
           >
             Hire Me
           </a>
@@ -254,8 +304,9 @@ const Hero = () => {
     </section>
   );
 };
+
 // -----------------------------------------------------------------------------
-// Services Section (unchanged except imports)
+// Services Section (images with fill)
 // -----------------------------------------------------------------------------
 const Services = () => {
   return (
@@ -263,7 +314,7 @@ const Services = () => {
       <div className="container mx-auto max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 md:mb-16 gap-6">
           <h2 className="text-3xl md:text-5xl font-semibold">
-            <span className="text-white">My </span> 
+            <span className="text-white">My </span>
             <span className="text-[#FF4D1C]">Services</span>
           </h2>
           <p className="text-gray-400 max-w-md text-sm md:text-base leading-relaxed md:text-right">
@@ -286,11 +337,13 @@ const Services = () => {
                   {service.title}
                 </h3>
                 <div className="relative mt-auto">
-                  <div className="rounded-2xl overflow-hidden h-48 md:h-56 w-full shadow-lg bg-white/5">
-                    <img
+                  <div className="relative rounded-2xl overflow-hidden h-48 md:h-56 w-full shadow-lg bg-white/5">
+                    <Image
                       src={service.image}
                       alt={service.title}
-                      className="w-full h-full object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity duration-500"
+                      fill
+                      className="object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity duration-500"
+                      sizes="(max-width: 768px) 100vw, 33vw"
                     />
                   </div>
                   <Link
@@ -298,6 +351,7 @@ const Services = () => {
                     className={`absolute -bottom-4 -right-4 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110 border-[6px] ${
                       isCenter ? "bg-[#FF4D1C] text-white border-[#2A2A2A]" : "bg-[#3A3A3A] text-white border-[#2A2A2A] group-hover:border-[#303030]"
                     }`}
+                    aria-label={`View ${service.title} details`}
                   >
                     <ArrowUpRight size={24} strokeWidth={2.5} />
                   </Link>
@@ -317,7 +371,7 @@ const Services = () => {
 };
 
 // -----------------------------------------------------------------------------
-// Work Experience (Resume) Section
+// Work Experience (Resume)
 // -----------------------------------------------------------------------------
 const WorkExperience = () => {
   return (
@@ -350,7 +404,7 @@ const WorkExperience = () => {
 };
 
 // -----------------------------------------------------------------------------
-// Why Hire Me (About) Section
+// Why Hire Me (About) – optimized image with fill
 // -----------------------------------------------------------------------------
 const WhyHireMe = () => {
   return (
@@ -365,12 +419,15 @@ const WhyHireMe = () => {
                 backgroundImage: "radial-gradient(#1A1A1A 2px, transparent 2px)",
                 backgroundSize: "12px 12px",
               }}
+              aria-hidden="true"
             ></div>
             <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-2xl">
-              <img
+              <Image
                 src="/amir2.png"
-                className="w-full h-full object-contain"
                 alt={CONFIG.name}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 280px, 400px"
               />
             </div>
           </div>
@@ -383,7 +440,6 @@ const WhyHireMe = () => {
           </h2>
           <p className="text-sm md:text-base text-gray-500 mb-8 md:mb-10 leading-relaxed px-2 lg:px-0">
             Hi, I'm Amir, a Next.js developer focused on building high-performance, scalable web applications that blend modern design with real-world functionality.
-
             From business websites and SaaS platforms to restaurant systems and custom web tools, I craft digital solutions designed to perform efficiently, scale seamlessly and drive meaningful business growth.
           </p>
 
@@ -400,7 +456,7 @@ const WhyHireMe = () => {
 
           <a
             href="#contact"
-            className="inline-block border border-[#FF4D1C] text-[#FF4D1C] px-6 md:px-8 py-2 md:py-3 rounded-full font-bold hover:bg-[#FF4D1C] hover:text-white transition-colors text-sm md:text-base"
+            className="inline-block border border-[#FF4D1C] text-[#FF4D1C] px-6 md:px-8 py-2 md:py-3 rounded-full font-bold hover:bg-[#FF4D1C] hover:text-white transition-colors text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]"
           >
             Hire Me
           </a>
@@ -411,7 +467,7 @@ const WhyHireMe = () => {
 };
 
 // -----------------------------------------------------------------------------
-// Portfolio Section
+// Portfolio Section (images with fill)
 // -----------------------------------------------------------------------------
 const Portfolio = () => {
   const [showAll, setShowAll] = useState(false);
@@ -438,7 +494,7 @@ const Portfolio = () => {
             {!showAll && (
               <button
                 onClick={handleShowMore}
-                className="bg-[#FF4D1C] text-white px-5 md:px-6 py-2 rounded-full text-xs md:text-sm font-bold flex items-center gap-2 hover:bg-orange-700 transition-colors cursor-pointer"
+                className="bg-[#FF4D1C] text-white px-5 md:px-6 py-2 rounded-full text-xs md:text-sm font-bold flex items-center gap-2 hover:bg-orange-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"
               >
                 See More <ArrowUpRight size={14} />
               </button>
@@ -457,17 +513,20 @@ const Portfolio = () => {
                   isThird && !showAll ? 'md:hidden' : ''
                 }`}
               >
-                <div className="bg-[#F3F4F6] rounded-[2rem] overflow-hidden h-[300px] md:h-[400px] relative shadow-lg">
-                  <img
+                <div className="relative bg-[#F3F4F6] rounded-[2rem] overflow-hidden h-[300px] md:h-[400px] shadow-lg">
+                  <Image
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    className="object-cover transform group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                   <a
                     href={item.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="absolute bottom-4 right-4 md:bottom-6 md:right-6 w-10 h-10 md:w-12 md:h-12 bg-[#FF4D1C] rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 shadow-lg"
+                    className="absolute bottom-4 right-4 md:bottom-6 md:right-6 w-10 h-10 md:w-12 md:h-12 bg-[#FF4D1C] rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 shadow-lg focus:opacity-100 focus:translate-y-0"
+                    aria-label={`View ${item.title} project (opens new tab)`}
                   >
                     <ArrowRight size={18} />
                   </a>
@@ -480,10 +539,10 @@ const Portfolio = () => {
                   ))}
                 </div>
                 <h3 className="text-lg md:text-xl font-bold text-[#1A1A1A] flex items-center gap-2">
-                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="hover:text-[#FF4D1C]">
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="hover:text-[#FF4D1C] focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded">
                     {item.title}
                   </a>
-                  <span className="text-[#FF4D1C]">
+                  <span className="text-[#FF4D1C]" aria-hidden="true">
                     <ArrowUpRight size={16} className="inline bg-[#FF4D1C] text-white rounded-full p-0.5" />
                   </span>
                 </h3>
@@ -498,7 +557,7 @@ const Portfolio = () => {
 };
 
 // -----------------------------------------------------------------------------
-// Testimonials Section
+// Testimonials Section (inline)
 // -----------------------------------------------------------------------------
 const Testimonials = () => {
   const reviews = [
@@ -570,7 +629,7 @@ const Testimonials = () => {
 };
 
 // -----------------------------------------------------------------------------
-// Call‑to‑Action Section with Modal Form
+// CTA Section with Modal (focus trap, accessible form)
 // -----------------------------------------------------------------------------
 const CTA = () => {
   const [email, setEmail] = useState('');
@@ -578,6 +637,42 @@ const CTA = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    prevFocusRef.current = document.activeElement as HTMLElement;
+    const focusable = modalRef.current?.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable?.length) {
+      (focusable[0] as HTMLElement).focus();
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+      if (e.key === "Tab" && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+        const first = focusableElements[0] as HTMLElement;
+        const last = focusableElements[focusableElements.length - 1] as HTMLElement;
+        if (e.shiftKey && document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      prevFocusRef.current?.focus();
+    };
+  }, [modalOpen]);
 
   const handleSendClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -638,10 +733,12 @@ const CTA = () => {
 
         <div className="relative max-w-xl mx-auto mb-8 md:mb-12 px-2">
           <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-lg p-1 pl-4 md:p-2 md:pl-6">
-            <div className="p-1 md:p-2 bg-[#FFEAE4] rounded-full text-[#FF4D1C]">
+            <div className="p-1 md:p-2 bg-[#FFEAE4] rounded-full text-[#FF4D1C]" aria-hidden="true">
               <Mail size={16} />
             </div>
+            <label htmlFor="cta-email" className="sr-only">Email address</label>
             <input
+              id="cta-email"
               type="email"
               placeholder="Enter Email Address"
               required
@@ -653,31 +750,33 @@ const CTA = () => {
             <button
               onClick={handleSendClick}
               disabled={status === 'loading' || !email.trim()}
-              className="bg-[#FF4D1C] text-white px-4 md:px-6 py-2 md:py-3 rounded-full text-xs md:text-sm font-bold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#FF4D1C] text-white px-4 md:px-6 py-2 md:py-3 rounded-full text-xs md:text-sm font-bold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]"
             >
               {status === 'loading' ? 'Sending...' : 'Send'}
             </button>
           </div>
 
           {status === 'success' && (
-            <p className="text-green-600 text-xs mt-2 text-center">
+            <p className="text-green-600 text-xs mt-2 text-center" role="status">
               Message received! Amir will contact you soon.
             </p>
           )}
           {status === 'error' && (
-            <p className="text-red-500 text-xs mt-2 text-center">Try again</p>
+            <p className="text-red-500 text-xs mt-2 text-center" role="alert">
+              Something went wrong. Please try again.
+            </p>
           )}
         </div>
 
         <div className="flex flex-wrap justify-center gap-4 md:gap-8 text-xs font-bold text-gray-600 uppercase tracking-wide">
           <span className="flex items-center gap-1 md:gap-2">
-            <CheckCircle2 size={14} className="text-[#FF4D1C]" /> 100% Job Success
+            <CheckCircle2 size={14} className="text-[#FF4D1C]" aria-hidden="true" /> 100% Job Success
           </span>
           <span className="flex items-center gap-1 md:gap-2">
-            <CheckCircle2 size={14} className="text-[#FF4D1C]" /> Open Source Contributor
+            <CheckCircle2 size={14} className="text-[#FF4D1C]" aria-hidden="true" /> Open Source Contributor
           </span>
           <span className="flex items-center gap-1 md:gap-2">
-            <CheckCircle2 size={14} className="text-[#FF4D1C]" /> Modern Frontend Developer
+            <CheckCircle2 size={14} className="text-[#FF4D1C]" aria-hidden="true" /> Modern Frontend Developer
           </span>
         </div>
       </div>
@@ -690,15 +789,23 @@ const CTA = () => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm"
             onClick={closeModal}
+            aria-modal="true"
+            role="dialog"
+            aria-label="Project discussion form"
           >
             <motion.div
+              ref={modalRef}
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={closeModal} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+              <button
+                onClick={closeModal}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded-full"
+                aria-label="Close modal"
+              >
                 <X size={20} />
               </button>
               <h3 className="text-xl font-bold text-[#1A1A1A] mb-2">Let's discuss your project</h3>
@@ -707,19 +814,25 @@ const CTA = () => {
               </p>
               <form onSubmit={handleModalSubmit}>
                 <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Enter your name</label>
+                  <label htmlFor="modal-name" className="block text-xs font-medium text-gray-600 mb-1">
+                    Your name
+                  </label>
                   <input
+                    id="modal-name"
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]/50"
-                    placeholder="e.g. john smith"
+                    placeholder="e.g. John Smith"
                   />
                 </div>
                 <div className="mb-6">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Project Details</label>
+                  <label htmlFor="modal-message" className="block text-xs font-medium text-gray-600 mb-1">
+                    Project Details
+                  </label>
                   <textarea
+                    id="modal-message"
                     required
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
@@ -731,7 +844,7 @@ const CTA = () => {
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="w-full bg-[#FF4D1C] text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors disabled:opacity-50"
+                  className="w-full bg-[#FF4D1C] text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]"
                 >
                   {status === 'loading' ? 'Sending...' : 'Send Message'}
                 </button>
@@ -745,36 +858,47 @@ const CTA = () => {
 };
 
 // -----------------------------------------------------------------------------
-// Angled Marquee
+// Pure CSS Angled Marquee (no framer-motion)
 // -----------------------------------------------------------------------------
 const AngledMarquee = () => {
   return (
     <div className="relative py-6 md:py-8 overflow-hidden bg-white mb-12 md:mb-16">
       <div className="absolute inset-0 flex items-center justify-center transform -rotate-1 scale-105 bg-[#FF4D1C] py-3 md:py-4 shadow-xl z-10">
-        <motion.div
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-          className="flex whitespace-nowrap gap-4 md:gap-8 text-white font-bold text-sm md:text-xl uppercase tracking-widest items-center"
-        >
+        <div className="marquee whitespace-nowrap flex gap-4 md:gap-8 text-white font-bold text-sm md:text-xl uppercase tracking-widest items-center">
           {[...Array(4)].map((_, i) => (
             <React.Fragment key={i}>
-              <span>Next.js</span> <span className="text-black">•</span>
-              <span>React</span> <span className="text-black">•</span>
-              <span>Full-Stack</span> <span className="text-black">•</span>
-              <span>SaaS Apps</span> <span className="text-black">•</span>
-              <span>Tailwind CSS</span> <span className="text-black">•</span>
-              <span>Web Utilities</span> <span className="text-black">•</span>
-              <span>Clean Code</span> <span className="text-black">•</span>
+              <span>Next.js</span> <span className="text-black" aria-hidden="true">•</span>
+              <span>React</span> <span className="text-black" aria-hidden="true">•</span>
+              <span>Full-Stack</span> <span className="text-black" aria-hidden="true">•</span>
+              <span>SaaS Apps</span> <span className="text-black" aria-hidden="true">•</span>
+              <span>Tailwind CSS</span> <span className="text-black" aria-hidden="true">•</span>
+              <span>Web Utilities</span> <span className="text-black" aria-hidden="true">•</span>
+              <span>Clean Code</span> <span className="text-black" aria-hidden="true">•</span>
             </React.Fragment>
           ))}
-        </motion.div>
+        </div>
       </div>
+      <style jsx>{`
+        .marquee {
+          animation: scroll 20s linear infinite;
+        }
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .marquee {
+            animation: none;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </div>
   );
 };
 
 // -----------------------------------------------------------------------------
-// Blog Section
+// Blog Section (images with fill)
 // -----------------------------------------------------------------------------
 const Blog = () => {
   return (
@@ -791,8 +915,14 @@ const Blog = () => {
           {blogs.map((blog, i) => (
             <div key={i} className="group cursor-pointer flex-shrink-0 w-[260px] sm:w-[300px] md:w-auto snap-start">
               <div className="relative mb-3 md:mb-4">
-                <div className="rounded-2xl overflow-hidden h-48 md:h-60 w-full shadow-lg bg-white/5">
-                  <img src={blog.image} alt={blog.title} className="w-full h-full object-cover object-top transform group-hover:scale-110 transition-transform duration-500" />
+                <div className="relative rounded-2xl overflow-hidden h-48 md:h-60 w-full shadow-lg bg-white/5">
+                  <Image
+                    src={blog.image}
+                    alt={blog.title}
+                    fill
+                    className="object-cover object-top transform group-hover:scale-110 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
                 </div>
                 <Link
                   href={`/blog/${blog.slug}`}
@@ -845,7 +975,10 @@ export const Footer = () => {
           <div>
             <h2 className="text-2xl md:text-4xl font-bold mb-2 text-center md:text-left">Let's Connect there</h2>
           </div>
-          <a href="#contact" className="bg-[#FF4D1C] hover:bg-orange-600 text-white px-6 md:px-8 py-2 md:py-3 rounded-full font-bold flex items-center gap-2 transition-colors text-sm md:text-base">
+          <a
+            href="#contact"
+            className="bg-[#FF4D1C] hover:bg-orange-600 text-white px-6 md:px-8 py-2 md:py-3 rounded-full font-bold flex items-center gap-2 transition-colors text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-white"
+          >
             Hire me <ArrowUpRight size={16} />
           </a>
         </div>
@@ -862,13 +995,13 @@ export const Footer = () => {
               I build high-performance, SEO-optimized, and fully responsive websites using Next.js to help your business stand out.
             </p>
             <div className="flex gap-3 md:gap-4 justify-center md:justify-start">
-              <a href={CONFIG.social.github} target="_blank" rel="noopener noreferrer" className="bg-[#262626] p-2 rounded-md hover:bg-[#FF4D1C] transition-colors">
+              <a href={CONFIG.social.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="bg-[#262626] p-2 rounded-md hover:bg-[#FF4D1C] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]">
                 <FaGithub size={14} />
               </a>
-              <a href={CONFIG.social.instagram} target="_blank" rel="noopener noreferrer" className="bg-[#262626] p-2 rounded-md hover:bg-[#FF4D1C] transition-colors">
+              <a href={CONFIG.social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="bg-[#262626] p-2 rounded-md hover:bg-[#FF4D1C] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]">
                 <FaInstagram size={14} />
               </a>
-              <a href={CONFIG.social.linkedin} target="_blank" rel="noopener noreferrer" className="bg-[#262626] p-2 rounded-md hover:bg-[#FF4D1C] transition-colors">
+              <a href={CONFIG.social.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="bg-[#262626] p-2 rounded-md hover:bg-[#FF4D1C] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]">
                 <FaLinkedin size={14} />
               </a>
             </div>
@@ -877,27 +1010,29 @@ export const Footer = () => {
           <div className="text-center md:text-left">
             <h4 className="font-bold text-[#FF4D1C] text-xs md:text-sm mb-4 md:mb-6 uppercase">Navigation</h4>
             <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-gray-400">
-              <li><a href="#home" className="hover:text-white">Home</a></li>
-              <li><a href="#about" className="hover:text-white">About Us</a></li>
-              <li><a href="#services" className="hover:text-white">Service</a></li>
-              <li><a href="#resume" className="hover:text-white">Resume</a></li>
-              <li><a href="#portfolio" className="hover:text-white">Project</a></li>
+              <li><a href="#home" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded">Home</a></li>
+              <li><a href="#about" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded">About Us</a></li>
+              <li><a href="#services" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded">Service</a></li>
+              <li><a href="#resume" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded">Resume</a></li>
+              <li><a href="#portfolio" className="hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded">Project</a></li>
             </ul>
           </div>
 
           <div className="text-center md:text-left">
             <h4 className="font-bold text-[#FF4D1C] text-xs md:text-sm mb-4 md:mb-6 uppercase">Contact</h4>
             <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-gray-400">
-              <li className="flex items-center justify-center md:justify-start gap-2"><Phone size={14} /> {CONFIG.phone}</li>
-              <li className="flex items-center justify-center md:justify-start gap-2"><Mail size={14} /> {CONFIG.email}</li>
-              <li className="flex items-center justify-center md:justify-start gap-2"><MapPin size={14} /> {CONFIG.location}</li>
+              <li className="flex items-center justify-center md:justify-start gap-2"><Phone size={14} aria-hidden="true" /> {CONFIG.phone}</li>
+              <li className="flex items-center justify-center md:justify-start gap-2"><Mail size={14} aria-hidden="true" /> {CONFIG.email}</li>
+              <li className="flex items-center justify-center md:justify-start gap-2"><MapPin size={14} aria-hidden="true" /> {CONFIG.location}</li>
             </ul>
           </div>
 
           <div className="text-center md:text-left">
             <h4 className="font-bold text-[#FF4D1C] text-xs md:text-sm mb-4 md:mb-6 uppercase">Get the latest information</h4>
             <form onSubmit={handleSubmit} className="flex bg-white rounded-md overflow-hidden pl-2 py-1 pr-1 max-w-xs mx-auto md:mx-0">
+              <label htmlFor="footer-email" className="sr-only">Email address</label>
               <input
+                id="footer-email"
                 type="email"
                 placeholder="Your email address"
                 required
@@ -905,7 +1040,7 @@ export const Footer = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-transparent text-black text-xs outline-none flex-1 w-full placeholder:text-gray-400 px-1"
               />
-              <button type="submit" className="bg-[#FF4D1C] p-2 rounded-md text-white hover:bg-orange-700">
+              <button type="submit" className="bg-[#FF4D1C] p-2 rounded-md text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Send email">
                 <Send size={14} />
               </button>
             </form>
@@ -916,9 +1051,9 @@ export const Footer = () => {
         <div className="border-t border-gray-800 pt-4 md:pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-2">
           <p>Copyright © 2026 {CONFIG.name}. All Rights Reserved.</p>
           <p>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded">Privacy Policy</Link>
             {" | "}
-            <Link href="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link>
+            <Link href="/terms" className="hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF4D1C] rounded">Terms & Conditions</Link>
           </p>
         </div>
       </div>
@@ -935,7 +1070,7 @@ export default function PortfolioPage() {
   if (!mounted) return null;
 
   return (
-    <main className="font-sans antialiased text-[#1A1A1A] bg-white selection:bg-[#FF4D1C] selection:text-white">
+    <main id="main-content" className="font-sans antialiased text-[#1A1A1A] bg-white selection:bg-[#FF4D1C] selection:text-white">
       <Navbar />
       <Hero />
       <Services />

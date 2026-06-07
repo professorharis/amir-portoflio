@@ -192,111 +192,108 @@ export const Navbar = () => {
 };
 
 // -----------------------------------------------------------------------------
-// Hero Section (optimized images, reduced motion)
+// Hero Section 
 // -----------------------------------------------------------------------------
 const Hero = () => {
-  const prefersReducedMotion = usePrefersReducedMotion();
+  const arrowSettings = {
+    width: 70,
+    height: 70,
+    gap: "7px",
+    verticalOffset: "-14px",
+    color: "#1A1A1A",
+    thickness: 3.3,
+    animationDelay: 0.5,
+  };
 
   return (
-    <section id="home" className="pt-26 pb-0 bg-white relative overflow-hidden flex flex-col items-center">
-      <motion.div
-        initial={prefersReducedMotion ? false : { y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="relative mb-2 border border-gray-200 px-6 py-2 rounded-full shadow-sm bg-white z-10"
-      >
+    <section id="home" className="pt-25 pb-0 bg-white relative overflow-hidden flex flex-col items-center">
+      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative mb-2 border border-gray-200 px-6 py-2 rounded-full shadow-sm bg-white z-10">
         <span className="font-medium text-gray-800 text-sm">Hello!</span>
         <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-b border-r border-gray-200 rotate-45"></div>
       </motion.div>
 
-  <motion.h1
-  initial={prefersReducedMotion ? false : { y: 30, opacity: 0 }}
-  animate={{ y: 0, opacity: 1 }}
-  className="text-3xl md:text-[4.5rem] font-semibold text-[#1A1A1A] text-center leading-[1.1] z-0 relative tracking-tight px-4 mt-10 md:mt-20 max-w-7xl mx-auto mt-4 md:-top-10"
+<motion.h1 
+  initial={{ y: 30, opacity: 0 }} 
+  animate={{ y: 0, opacity: 1 }} 
+  className="text-3xl md:text-[4rem] font-semibold text-[#1A1A1A] text-center leading-[1.1] z-0 relative tracking-tight px-4 mt-3 md:mt-9 mb-1 md:mb-18 max-w-7xl mx-auto"
 >
   I'm <span className="text-[#FF4D1C]">{CONFIG.name}</span>,<br /> Next.js Expert
 </motion.h1>
-
       <div className="relative w-full max-w-6xl mx-auto flex justify-center items-end h-[400px] md:h-[550px] -mt-30 md:-mt-40">
-        {/* Left quote - hidden on mobile */}
         <div className="absolute top-[20%] left-6 md:left-12 z-10 hidden lg:block">
-          <Quote className="text-[#1A1A1A] mb-2 fill-current rotate-180" size={24} aria-hidden="true" />
-          <p className="text-[13px] font-medium text-gray-500 max-w-[190px]">
-            I build high-performance web applications using Next.js.
-          </p>
-          <div className="mt-4 font-bold text-2xl text-[#1A1A1A]">
-            05+ <span className="text-xs font-normal text-gray-400 block">Client Served</span>
-          </div>
+          <Quote className="text-[#1A1A1A] mb-2 fill-current rotate-180" size={24} />
+          <p className="text-[13px] font-medium text-gray-500 max-w-[190px]">I build high-performance web applications using Next.js.</p>
+          <div className="mt-4 font-bold text-2xl text-[#1A1A1A]">05+ <span className="text-xs font-normal text-gray-400 block">Client Served</span></div>
         </div>
 
-        {/* Right stars - hidden on mobile */}
         <div className="absolute top-[20%] right-6 md:right-12 text-right z-10 hidden lg:block">
-          <div className="flex gap-1 justify-end mb-2" aria-label="5 star rating">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Star key={i} size={14} className="fill-[#FF4D1C] text-[#FF4D1C]" aria-hidden="true" />
-            ))}
+          <div className="flex gap-1 justify-end mb-2">
+            {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={14} className="fill-[#FF4D1C] text-[#FF4D1C]" />)}
           </div>
           <div className="font-bold text-2xl text-[#1A1A1A]">Next.js</div>
-          <span className="text-gray-400 text-xs border-t border-gray-200 pt-1 inline-block min-w-[100px]">
-            Expertise
-          </span>
+          <span className="text-gray-400 text-xs border-t border-gray-200 pt-1 inline-block min-w-[100px]">Expertise</span>
         </div>
 
         <div className="absolute bottom-0 w-[280px] h-[140px] md:w-[480px] md:h-[270px] bg-[#FF4D1C] rounded-t-full z-10"></div>
-        <div className="relative z-20 w-[280px] md:w-[480px]">
-          <Image
-            src="/amir.png"
-            alt={CONFIG.name}
-            width={480}
-            height={550}
-            priority
-            className="w-full h-auto object-contain"
-            style={{ width: 'auto', height: 'auto' }}
-          />
-        </div>
+        <motion.div initial={{ y: 50 }} animate={{ y: 0 }} className="relative z-20 w-[280px] md:w-[480px]">
+          <img src="/amir.png" alt={CONFIG.name} className="w-full h-auto object-contain" />
+        </motion.div>
 
         <div className="absolute bottom-[40px] md:bottom-[60px] z-50 flex gap-4 justify-center items-center">
           <div className="relative">
-            <div className="absolute right-full top-1/2 pointer-events-none hidden md:block"
-              style={{ marginRight: "7px", marginTop: "-14px", width: "70px", height: "70px", transform: "translateY(-50%)" }}
-              aria-hidden="true"
+            <div 
+              className="absolute right-full top-1/2 pointer-events-none hidden md:block"
+              style={{ 
+                marginRight: arrowSettings.gap, 
+                marginTop: arrowSettings.verticalOffset,
+                width: arrowSettings.width,
+                height: arrowSettings.height,
+                transform: "translateY(-50%)" 
+              }}
             >
-              {!prefersReducedMotion && (
-                <motion.svg width="100%" height="100%" viewBox="0 0 100 60" fill="none" initial="hidden" animate="visible">
-                  <motion.path
-                    d="M 5 5 C 5 35, 25 50, 95 50"
-                    stroke="#1A1A1A"
-                    strokeWidth={3.3}
-                    strokeLinecap="round"
-                    variants={{
-                      hidden: { pathLength: 0, opacity: 0 },
-                      visible: { pathLength: 1, opacity: 1, transition: { duration: 0.8, delay: 0.5 } },
-                    }}
-                  />
-                  <motion.path
-                    d="M 80 40 L 95 50 L 80 60"
-                    stroke="#1A1A1A"
-                    strokeWidth={3.3}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    variants={{
-                      hidden: { opacity: 0 },
-                      visible: { opacity: 1, transition: { delay: 1.2 } },
-                    }}
-                  />
-                </motion.svg>
-              )}
+              <motion.svg 
+                width="100%" 
+                height="100%" 
+                viewBox="0 0 100 60" 
+                fill="none" 
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.path
+                  d="M 5 5 C 5 35, 25 50, 95 50"
+                  stroke={arrowSettings.color}
+                  strokeWidth={arrowSettings.thickness}
+                  strokeLinecap="round"
+                  variants={{
+                    hidden: { pathLength: 0, opacity: 0 },
+                    visible: { 
+                      pathLength: 1, 
+                      opacity: 1,
+                      transition: { duration: 0.8, delay: arrowSettings.animationDelay } 
+                    }
+                  }}
+                />
+                <motion.path
+                  d="M 80 40 L 95 50 L 80 60"
+                  stroke={arrowSettings.color}
+                  strokeWidth={arrowSettings.thickness}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: { opacity: 1, transition: { delay: arrowSettings.animationDelay + 0.7 } }
+                  }}
+                />
+              </motion.svg>
             </div>
-            <a
-              href="#portfolio"
-              className="bg-[#FF4D1C] text-white px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,77,28,0.4)] hover:scale-105 transition-transform duration-300 block focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]"
+            <a 
+              href="#portfolio" 
+              className="bg-[#FF4D1C] text-white px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,77,28,0.4)] hover:scale-105 transition-transform duration-300 block"
             >
               Portfolio
             </a>
           </div>
-          <a
-            href="#contact"
-            className="bg-white text-black px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-[#FF4D1C]"
-          >
+          <a href="#contact" className="bg-white text-black px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:bg-gray-50 transition">
             Hire Me
           </a>
         </div>

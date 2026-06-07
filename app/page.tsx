@@ -146,29 +146,49 @@ const Hero = () => {
   };
 
   return (
-    <section id="home" className="pt-24 pb-0 bg-white relative overflow-hidden flex flex-col items-center">
-      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="relative mb-2 border border-gray-200 px-6 py-2 rounded-full shadow-sm bg-white z-10">
+    <section id="home" className="pt-26 pb-0 bg-white relative overflow-hidden flex flex-col items-center">
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="relative mb-2 border border-gray-200 px-6 py-2 rounded-full shadow-sm bg-white z-10"
+      >
         <span className="font-medium text-gray-800 text-sm">Hello!</span>
         <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-b border-r border-gray-200 rotate-45"></div>
       </motion.div>
 
-      <motion.h1 initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-3xl md:text-[5.5rem] font-semibold text-[#1A1A1A] text-center leading-[1.1] z-0 relative tracking-tight px-4 mt-8 md:mt-16 max-w-7xl mx-auto">
+      {/* ===== HEADING WITH VERTICAL OFFSET ===== */}
+      {/* Change -top-1 to -top-2 (8px) to move higher, or -top-0.5 (2px) for smaller step.
+          Remove the class to revert to original position. */}
+      <motion.h1
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="text-3xl md:text-[5.5rem] font-semibold text-[#1A1A1A] text-center leading-[1.1] z-0 relative tracking-tight px-4 mt-10 md:mt-20 max-w-7xl mx-auto relative -top-11 md:-top-11"
+      >
         I'm <span className="text-[#FF4D1C]">{CONFIG.name}</span>,<br /> Next.js Expert
       </motion.h1>
 
+      {/* Rest of the hero content (image, buttons, etc.) unchanged */}
       <div className="relative w-full max-w-6xl mx-auto flex justify-center items-end h-[400px] md:h-[550px] -mt-30 md:-mt-40">
         <div className="absolute top-[20%] left-6 md:left-12 z-10 hidden lg:block">
           <Quote className="text-[#1A1A1A] mb-2 fill-current rotate-180" size={24} />
-          <p className="text-[13px] font-medium text-gray-500 max-w-[190px]">I build high-performance web applications using Next.js.</p>
-          <div className="mt-4 font-bold text-2xl text-[#1A1A1A]">05+ <span className="text-xs font-normal text-gray-400 block">Client Served</span></div>
+          <p className="text-[13px] font-medium text-gray-500 max-w-[190px]">
+            I build high-performance web applications using Next.js.
+          </p>
+          <div className="mt-4 font-bold text-2xl text-[#1A1A1A]">
+            05+ <span className="text-xs font-normal text-gray-400 block">Client Served</span>
+          </div>
         </div>
 
         <div className="absolute top-[20%] right-6 md:right-12 text-right z-10 hidden lg:block">
           <div className="flex gap-1 justify-end mb-2">
-            {[1, 2, 3, 4, 5].map((i) => <Star key={i} size={14} className="fill-[#FF4D1C] text-[#FF4D1C]" />)}
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Star key={i} size={14} className="fill-[#FF4D1C] text-[#FF4D1C]" />
+            ))}
           </div>
           <div className="font-bold text-2xl text-[#1A1A1A]">Next.js</div>
-          <span className="text-gray-400 text-xs border-t border-gray-200 pt-1 inline-block min-w-[100px]">Expertise</span>
+          <span className="text-gray-400 text-xs border-t border-gray-200 pt-1 inline-block min-w-[100px]">
+            Expertise
+          </span>
         </div>
 
         <div className="absolute bottom-0 w-[280px] h-[140px] md:w-[480px] md:h-[270px] bg-[#FF4D1C] rounded-t-full z-10"></div>
@@ -178,24 +198,17 @@ const Hero = () => {
 
         <div className="absolute bottom-[40px] md:bottom-[60px] z-50 flex gap-4 justify-center items-center">
           <div className="relative">
-            <div 
+            <div
               className="absolute right-full top-1/2 pointer-events-none hidden md:block"
-              style={{ 
-                marginRight: arrowSettings.gap, 
+              style={{
+                marginRight: arrowSettings.gap,
                 marginTop: arrowSettings.verticalOffset,
                 width: arrowSettings.width,
                 height: arrowSettings.height,
-                transform: "translateY(-50%)" 
+                transform: "translateY(-50%)",
               }}
             >
-              <motion.svg 
-                width="100%" 
-                height="100%" 
-                viewBox="0 0 100 60" 
-                fill="none" 
-                initial="hidden"
-                animate="visible"
-              >
+              <motion.svg width="100%" height="100%" viewBox="0 0 100 60" fill="none" initial="hidden" animate="visible">
                 <motion.path
                   d="M 5 5 C 5 35, 25 50, 95 50"
                   stroke={arrowSettings.color}
@@ -203,11 +216,11 @@ const Hero = () => {
                   strokeLinecap="round"
                   variants={{
                     hidden: { pathLength: 0, opacity: 0 },
-                    visible: { 
-                      pathLength: 1, 
+                    visible: {
+                      pathLength: 1,
                       opacity: 1,
-                      transition: { duration: 0.8, delay: arrowSettings.animationDelay } 
-                    }
+                      transition: { duration: 0.8, delay: arrowSettings.animationDelay },
+                    },
                   }}
                 />
                 <motion.path
@@ -218,19 +231,22 @@ const Hero = () => {
                   strokeLinejoin="round"
                   variants={{
                     hidden: { opacity: 0 },
-                    visible: { opacity: 1, transition: { delay: arrowSettings.animationDelay + 0.7 } }
+                    visible: { opacity: 1, transition: { delay: arrowSettings.animationDelay + 0.7 } },
                   }}
                 />
               </motion.svg>
             </div>
-            <a 
-              href="#portfolio" 
+            <a
+              href="#portfolio"
               className="bg-[#FF4D1C] text-white px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,77,28,0.4)] hover:scale-105 transition-transform duration-300 block"
             >
               Portfolio
             </a>
           </div>
-          <a href="#contact" className="bg-white text-black px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:bg-gray-50 transition">
+          <a
+            href="#contact"
+            className="bg-white text-black px-5 md:px-10 py-3 md:py-3.5 rounded-full font-bold text-sm border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:bg-gray-50 transition"
+          >
             Hire Me
           </a>
         </div>
@@ -238,7 +254,6 @@ const Hero = () => {
     </section>
   );
 };
-
 // -----------------------------------------------------------------------------
 // Services Section (unchanged except imports)
 // -----------------------------------------------------------------------------

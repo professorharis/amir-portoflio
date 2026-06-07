@@ -6,7 +6,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   CornerDownRight,
-  Dribbble,
   Menu,
   X,
   Star,
